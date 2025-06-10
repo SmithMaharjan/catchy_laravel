@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreAddSongsInAlbumRequest;
 use App\Http\Requests\StoreAlbumRequest;
+use App\Http\Requests\StoreSongRequest;
 use App\Http\Requests\UpdateAlbumRequest;
 use App\Models\Album;
+use App\Models\Song;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
@@ -21,36 +24,48 @@ class AlbumController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(StoreAlbumRequest $request)
+    public function create($attributes)
     {
-        try {
-            $user = Auth::user();
-            if ($user->role->name !== "artist") {
-                return response()->json([
-                    "message" => "only artist can create album"
-                ]);
-            }
-            $attributes = $request->validated();
-            $attributes["artist_id"] = $user->id;
-            $artist = Album::create($attributes);
+        $user = Auth::user();
+        if ($user->role->name !== "artist") {
             return response()->json([
-                "message" => "created album",
-                "album" => $artist,
-            ]);
-        } catch (ValidationException $exception) {
-            return response()->json([
-                "message" => "validation error",
-                "error" => $exception->getMessage()
-            ], 403);
-        } catch (\Exception $exception) {
-            return response()->json([
-                "message" => "something went wrong while creating album",
-                "error" => $exception->getMessage()
+                "message" => "only artist can create album"
             ]);
         }
+        $attributes["artist_id"] = $user->id;
+        $artist = Album::create($attributes);
+        return $artist;
     }
 
-    public function addSongsInAlbum() {}
+
+    public function addSongsInAlbum(StoreAddSongsInAlbumRequest $request)
+    {
+        $albumAttributes = [
+            "name" => $request->album_name
+        ];
+        $album = $this->create($albumAttributes);
+        foreach ($request->songs as $song) {
+            $songModel = Song::find($song['id']);
+            if ($songModel) {
+                $songModel->update([
+                    'name' => $song['name'],
+                    'artist_id' => Auth::id(),
+                    'album_id' => $album->id,
+                ]);
+            } else {
+                Song::create([
+                    'name' => $song['name'],
+                    'artist_id' => Auth::id(),
+                    'album_id' => $album->id,
+                ]);
+            }
+        }
+        return response()->json([
+            "album created with your songs"
+        ]);
+    }
+
+
 
     /**
      * Store a newly created resource in storage.

@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::table('songs', function (Blueprint $table) {
             //
-            $table->foreignIdFor(Album::class);
+            $table->foreignIdFor(Album::class)->constrained()->cascadeOnDelete();
         });
     }
 

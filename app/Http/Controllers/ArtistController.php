@@ -25,6 +25,13 @@ class ArtistController extends Controller
         // dd($artist->toArray());
     }
 
+    public function artistExist($artistId)
+    {
+        $artist = User::find($artistId);
+        return $artist;
+    }
+
+
     /**
      * Show the form for creating a new resource.
      */

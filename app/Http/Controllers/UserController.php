@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\UserRegister;
 use App\Http\Requests\StoreSessionUserRequest;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
+use App\Models\User;
 use App\Services\UserServices;
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
@@ -27,6 +31,8 @@ class UserController extends Controller
         try {
             $attributes = $request->validated();
             [$user, $token] = $this->user->create($attributes);
+            event(new UserRegister($user));
+            Auth::login($user);
             return response()->json([
                 "message" => "User registered",
                 "user" => $user,
@@ -63,8 +69,15 @@ class UserController extends Controller
         } catch (\Exception $exception) {
             return response()->json([
                 "message" => "something went wrong",
+                "error" => $exception->getMessage()
             ]);
         }
+    }
+
+    public function userExist($userId)
+    {
+        $user = User::find($userId);
+        return $user;
     }
 
     /**

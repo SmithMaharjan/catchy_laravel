@@ -14,9 +14,12 @@ class SongController extends Controller
     public function index()
     {
         $songs = Song::with("artist")->get();
-        dd($songs->toArray());
+        // dd($songs->toArray());
+        return response()->json([
+            "message" => "all songs",
+            "songs" => $songs,
+        ]);
     }
-
     /**
      * Show the form for creating a new resource.
      */
