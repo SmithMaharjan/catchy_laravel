@@ -4,11 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreAddSongsInAlbumRequest;
 use App\Http\Requests\StoreAlbumRequest;
+use App\Http\Requests\StoreDeleteIdRequest;
 use App\Http\Requests\StoreSongRequest;
 use App\Http\Requests\UpdateAlbumRequest;
 use App\Models\Album;
+use Illuminate\Http\Request;
+use App\Models\Artist;
 use App\Models\Song;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class AlbumController extends Controller
@@ -21,48 +25,96 @@ class AlbumController extends Controller
         //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create($attributes)
+    public function getArtistAlbum()
     {
         $user = Auth::user();
-        if ($user->role->name !== "artist") {
-            return response()->json([
-                "message" => "only artist can create album"
-            ]);
-        }
-        $attributes["artist_id"] = $user->id;
-        $artist = Album::create($attributes);
-        return $artist;
+        $album = $user->albums()->with('songs')->get();
+        return response()->json([
+            'success' => true,
+            "message" => "artist album",
+            "album" => $album
+        ]);
+    }
+
+    public function getSingleArtistAlbum($artistId)
+    {
+        $user = Auth::user();
+        $artistAlbums = $user->albums()->with('songs')->where("artist_id", $artistId)->get();
+        return response()->json([
+            'success' => true,
+            "message" => "artist album",
+            "album" => $artistAlbums
+        ]);
+    }
+
+    public function getSingleAlbum($albumId)
+    {
+        $user = Auth::user();
+        $artistAlbum = $user->albums()->with('songs')->where("id", $albumId)->get();
+        return response()->json([
+            'success' => true,
+            "message" => "single album",
+            "album" => $artistAlbum
+        ]);
     }
 
 
-    public function addSongsInAlbum(StoreAddSongsInAlbumRequest $request)
+
+    /**
+     * Show the form for creating a new resource.
+     */
+
+
+    public function create(StoreAddSongsInAlbumRequest $request)
     {
-        $albumAttributes = [
-            "name" => $request->album_name
-        ];
-        $album = $this->create($albumAttributes);
-        foreach ($request->songs as $song) {
-            $songModel = Song::find($song['id']);
-            if ($songModel) {
-                $songModel->update([
-                    'name' => $song['name'],
-                    'artist_id' => Auth::id(),
-                    'album_id' => $album->id,
+        $user = Auth::user();
+        DB::beginTransaction();
+        try {
+            $invalidSongs = [];
+            foreach ($request->songs as $songId) {
+                $songModel = Song::find($songId);
+                if (!$songModel || $songModel->album_id !== null) {
+                    $invalidSongs[] = $songModel->name ?? "song id $songId";
+                }
+            }
+
+            if (count($invalidSongs) > 0) {
+                DB::rollBack();
+                return response()->json([
+                    "some songs are already in an album"
                 ]);
-            } else {
-                Song::create([
-                    'name' => $song['name'],
-                    'artist_id' => Auth::id(),
+            }
+            $img = $request->file('image');
+            $imgFolderName = 'cover_' . Auth::id();
+            $imgFileName = time() . '.' . $img->getClientOriginalExtension();
+            $imgPath = $img->storeAs("album/{$imgFolderName}", $imgFileName, 'public');
+
+            $album = Album::create([
+                'name' => $request->album_name,
+                "artist_id" => $user->id,
+                "img_path" => $imgPath
+            ]);
+
+            foreach ($request->songs as $songId) {
+                $songModel = Song::find($songId);
+                $songModel->update([
                     'album_id' => $album->id,
                 ]);
             }
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Album created with all songs.',
+                'album_id' => $album->id,
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to create album.',
+                'error' => $e->getMessage()
+            ], 500);
         }
-        return response()->json([
-            "album created with your songs"
-        ]);
     }
 
 
@@ -78,10 +130,23 @@ class AlbumController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Album $album)
+    public function show($id)
     {
-        //
+        $album = Album::find($id);
+
+        if (!$album) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Album not found',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'album' => $album,
+        ]);
     }
+
 
     /**
      * Show the form for editing the specified resource.
@@ -94,16 +159,69 @@ class AlbumController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateAlbumRequest $request, Album $album)
+    public function update(Request $request, $id)
     {
-        //
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'img_path' => 'nullable|string', // if image upload, handle differently
+        ]);
+
+        $album = Album::find($id);
+
+        if (!$album) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Album not found',
+            ], 404);
+        }
+
+        $album->name = $request->name;
+        $album->img_path = $request->img_path; // or handle file upload
+        $album->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Album updated successfully',
+            'album' => $album,
+        ]);
     }
+
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Album $album)
+    public function destroy(StoreDeleteIdRequest $request)
     {
-        //
+        try {
+            $attribute = $request->validated();
+
+            if ($attribute["artistId"] != Auth::id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized'
+                ], 403);
+            }
+
+            $deleted = Album::destroy($attribute["removeId"]);
+
+            if ($deleted === 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Album not found or already deleted'
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Album deleted',
+                'deletedCount' => $deleted
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong while deleting the album',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

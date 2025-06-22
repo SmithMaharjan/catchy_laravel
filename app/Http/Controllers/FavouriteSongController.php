@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreDelete;
 use App\Http\Requests\StoreFavouriteSongRequest;
 use App\Http\Requests\UpdateFavouriteSongRequest;
+use App\Models\Favourite_user_song;
 use App\Models\FavouriteSong;
 use App\Services\FavServices;
+use Illuminate\Support\Facades\DB;
 
 class FavouriteSongController extends Controller
 {
@@ -17,7 +20,8 @@ class FavouriteSongController extends Controller
     {
         $songs = $this->favServices->getAllFavSongs();
         return response()->json([
-            "message" => "all liked songs",
+            'success' => true,
+            "message" => "all user liked songs",
             "fav_songs" => $songs
         ]);
     }
@@ -25,13 +29,19 @@ class FavouriteSongController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create() {}
 
     public function addToFavourite(StoreFavouriteSongRequest $request)
     {
         $attributes = $request->validated();
         $favouriteSong =  $this->favServices->addToUserFavSong($attributes);
+        return response()->json([
+            'success' => true,
+            "message" => "added to fav song",
+            "song" => $favouriteSong
+        ]);
     }
+
+
 
     /**
      * Store a newly created resource in storage.
@@ -68,8 +78,23 @@ class FavouriteSongController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(FavouriteSong $favouriteSong)
+    public function destroy(StoreDelete $request)
     {
-        //
+        try {
+            $attribute = $request->validated();
+
+            $deleted = Favourite_user_song::destroy($attribute["removeId"]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Album deleted',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong while deleting the album',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

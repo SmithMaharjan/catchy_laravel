@@ -29,15 +29,33 @@ class UserController extends Controller
     public function create(StoreUserRequest $request)
     {
         try {
+
             $attributes = $request->validated();
+
+            if (isset($attributes['username'])) {
+                $nameParts = preg_split('/\s+/', trim($attributes['username']));
+
+                $attributes['first_name'] = $nameParts[0] ?? null;
+                $attributes['middle_name'] = count($nameParts) === 3 ? $nameParts[1] : null;
+                $attributes['last_name'] = end($nameParts);
+
+                unset($attributes['username']);
+            }
+            $img = $request->file('image');
+            $imgFolderName = 'user' . Auth::id();
+            $imgFileName = time() . '.' . $img->getClientOriginalExtension();
+            $imgPath = $img->storeAs("people/{$imgFolderName}", $img, 'public');
+            $attributes["img_path"] = $imgPath;
             [$user, $token] = $this->user->create($attributes);
-            event(new UserRegister($user));
+
             Auth::login($user);
+            event(new UserRegister($user));
             return response()->json([
+                'success' => true,
                 "message" => "User registered",
                 "user" => $user,
                 "token" => $token
-            ]);
+            ])->cookie('access_token', $token, 600, "/", 'localhost', false, false);
         } catch (ValidationException $exception) {
             return response()->json([
                 "message" => "validation error",
@@ -57,10 +75,11 @@ class UserController extends Controller
             $User = $this->user->login($attributes);
             [$user, $token] = $User;
             return response()->json([
+                'success' => true,
                 "message" => "User logged in",
                 "user" => $user,
                 "token" => $token
-            ], 200);
+            ], 200)->cookie('access_token', $token, 600, "/", 'localhost', false, false);
         } catch (ValidationException $exception) {
             return response()->json([
                 "message" => "validation error",
@@ -93,7 +112,20 @@ class UserController extends Controller
      */
     public function show()
     {
-        //
+        try {
+            $userId = Auth::id();
+            $user = User::findOrFail($userId);
+
+            return response()->json([
+                'success' => true,
+                'data' => $user
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found'
+            ], 404);
+        }
     }
 
     /**

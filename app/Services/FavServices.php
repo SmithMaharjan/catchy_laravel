@@ -25,6 +25,7 @@ class FavServices
             "song_id" => $songId,
         ]);
         return response()->json([
+            'success' => true,
             "message" => "song added to fav"
         ]);
     }
@@ -42,7 +43,7 @@ class FavServices
 
     public function getAllFavSongs()
     {
-        $songs = Favourite_user_song::where('artist_id', Auth::id())->get();
+        $songs = Favourite_user_song::with('songs')->where('artist_id', Auth::id())->get();
         return $songs;
     }
 }

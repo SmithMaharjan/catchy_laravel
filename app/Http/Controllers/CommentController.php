@@ -27,6 +27,7 @@ class CommentController extends Controller
         $attributes["user_id"] = Auth::id();
         $comment = Comment::create($attributes);
         return response()->json([
+            'success' => true,
             "comment" => "new comment added",
             "data" => $comment
         ]);

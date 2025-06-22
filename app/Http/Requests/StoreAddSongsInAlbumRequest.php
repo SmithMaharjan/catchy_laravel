@@ -26,9 +26,8 @@ class StoreAddSongsInAlbumRequest extends FormRequest
 
             'songs' => ['required', 'array', 'min:1'],
 
-            'songs.*.id' => ['nullable', 'integer', 'exists:songs,id'],  // nullable for new songs, must exist if given
-
-            'songs.*.name' => ['nullable', 'string', 'max:255'],
+            'songs.*.id' => ['integer', 'exists:songs,id'],
+            'image' => ['required']
         ];
     }
 }

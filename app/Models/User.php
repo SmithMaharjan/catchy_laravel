@@ -22,6 +22,9 @@ class User extends Authenticatable implements OAuthenticatable, MustVerifyEmail,
         "email",
         "password",
         "role_id",
+        "google_id",
+        "img_path",
+        "email_verified_at"
     ];
 
     protected $casts = [
@@ -38,7 +41,7 @@ class User extends Authenticatable implements OAuthenticatable, MustVerifyEmail,
 
     public function albums()
     {
-        return $this->hasMany(Album::class);
+        return $this->hasMany(Album::class, "artist_id");
     }
 
     public function favourite_user_song()
@@ -46,11 +49,10 @@ class User extends Authenticatable implements OAuthenticatable, MustVerifyEmail,
         return $this->hasMany(Favourite_user_song::class);
     }
 
-    public function playlist()
+    public function playlists()
     {
-        return $this->hasMany(Playlist::class, "user_playlist");
+        return $this->belongsToMany(Playlist::class, 'user_playlist', 'user_id', 'playlist_id');
     }
-
     public function comment()
     {
         return $this->hasMany(Comment::class);

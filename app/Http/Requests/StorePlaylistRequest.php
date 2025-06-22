@@ -23,8 +23,9 @@ class StorePlaylistRequest extends FormRequest
     {
         return [
             "name" => ['required'],
-            "is_collaborative" => ['required']
-
+            "is_collaborative" => ['required'],
+            "image" => ["required"],
+            "description" => ["required"]
         ];
     }
 }

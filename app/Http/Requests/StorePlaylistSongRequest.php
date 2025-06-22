@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateCommentRequest extends FormRequest
+class StorePlaylistSongRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,9 +22,9 @@ class UpdateCommentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "user_id" => ["required"],
-            "user_id" => ["required"],
-            "user_id" => ["required"],
+            'playlist_id' => 'required',
+            'song_ids' => 'required|array',
+            'song_ids.*' => 'exists:songs,id'
         ];
     }
 }

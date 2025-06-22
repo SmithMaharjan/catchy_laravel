@@ -6,6 +6,7 @@ use App\Http\Requests\StoreArtistRequest;
 use App\Http\Requests\UpdateArtistRequest;
 use App\Models\Artist;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class ArtistController extends Controller
 {
@@ -15,14 +16,22 @@ class ArtistController extends Controller
     public function index()
     {
         //
-        $artist = User::with("role")->whereHas("role", (function ($query) {
-            return $query->where("name", "artist");
-        }))->get();
+        $artist = User::where("role_id", 2)->get();
         return response()->json([
+            'success' => true,
             "message" => "all artist",
             "artists" => $artist
         ]);
-        // dd($artist->toArray());
+    }
+    public function getSingleArtist($artistId)
+    {
+        //
+        $artist = User::where("id", $artistId)->where("role_id", 2)->get();
+        return response()->json([
+            'success' => true,
+            "message" => "single artist",
+            "artists" => $artist
+        ]);
     }
 
     public function artistExist($artistId)
@@ -30,7 +39,6 @@ class ArtistController extends Controller
         $artist = User::find($artistId);
         return $artist;
     }
-
 
     /**
      * Show the form for creating a new resource.
