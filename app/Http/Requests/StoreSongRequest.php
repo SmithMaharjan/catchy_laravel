@@ -23,7 +23,8 @@ class StoreSongRequest extends FormRequest
     {
         return [
             "name" => ["required"],
-            "artist_id" => ["required"]
+            "audio" => ["required"],
+            "image" => ["required"]
         ];
     }
 }

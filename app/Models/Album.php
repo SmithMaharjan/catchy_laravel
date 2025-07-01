@@ -11,11 +11,17 @@ class Album extends Model
     use HasFactory;
     protected $fillable = [
         "name",
+        "img_path",
         "artist_id"
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function songs()
+    {
+        return $this->hasMany(Song::class);
     }
 }
