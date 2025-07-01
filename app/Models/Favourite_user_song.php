@@ -23,8 +23,8 @@ class Favourite_user_song extends Model
     {
         return $this->belongsTo(Song::class, "song_id");
     }
-    public function favourite()
-    {
-        return $this->belongsTo(FavouriteSong::class);
-    }
+    // public function favourite()
+    // {
+    //     return $this->belongsTo(FavouriteSong::class);
+    // }
 }

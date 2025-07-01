@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
 use App\Services\UserServices;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
@@ -34,11 +35,9 @@ class UserController extends Controller
 
             if (isset($attributes['username'])) {
                 $nameParts = preg_split('/\s+/', trim($attributes['username']));
-
                 $attributes['first_name'] = $nameParts[0] ?? null;
                 $attributes['middle_name'] = count($nameParts) === 3 ? $nameParts[1] : null;
                 $attributes['last_name'] = end($nameParts);
-
                 unset($attributes['username']);
             }
             $img = $request->file('image');
@@ -93,6 +92,24 @@ class UserController extends Controller
         }
     }
 
+
+    public function logout(Request $request)
+    {
+        try {
+            $request->user()->token()->revoke();
+            return response()->json([
+                'success' => true,
+                'message' => 'User logged out'
+            ], 200)->cookie('access_token', '', -1, '/', 'localhost', false, false);
+        } catch (\Exception $exception) {
+            return response()->json([
+                'message' => 'Something went wrong during logout',
+                'error' => $exception->getMessage()
+            ], 500);
+        }
+    }
+
+
     public function userExist($userId)
     {
         $user = User::find($userId);
@@ -126,29 +143,5 @@ class UserController extends Controller
                 'message' => 'User not found'
             ], 404);
         }
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit()
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateUserRequest $request,)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy()
-    {
-        //
     }
 }

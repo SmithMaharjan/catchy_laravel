@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateFavouriteSongRequest;
 use App\Models\Favourite_user_song;
 use App\Models\FavouriteSong;
 use App\Services\FavServices;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class FavouriteSongController extends Controller
@@ -41,40 +42,6 @@ class FavouriteSongController extends Controller
         ]);
     }
 
-
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreFavouriteSongRequest $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(FavouriteSong $favouriteSong)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(FavouriteSong $favouriteSong)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateFavouriteSongRequest $request, FavouriteSong $favouriteSong)
-    {
-        //
-    }
-
     /**
      * Remove the specified resource from storage.
      */
@@ -83,7 +50,23 @@ class FavouriteSongController extends Controller
         try {
             $attribute = $request->validated();
 
-            $deleted = Favourite_user_song::destroy($attribute["removeId"]);
+            $favourite = Favourite_user_song::find($attribute["removeId"]);
+
+            if (!$favourite) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Favourite not found',
+                ], 404);
+            }
+
+            if ($favourite->artist_id !== Auth::id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized.',
+                ], 403);
+            }
+
+            $favourite->delete();
 
             return response()->json([
                 'success' => true,

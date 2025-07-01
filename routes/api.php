@@ -22,6 +22,7 @@ use Illuminate\Support\Str;
 
 Route::post("/register", [UserController::class, "create"]);
 Route::post("/login", [UserController::class, "login"]);
+Route::post("/logout", [UserController::class, "logout"]);
 Route::get("/profile", [UserController::class, "show"])->middleware("auth:api");
 
 Route::get("/getAllArtist", [ArtistController::class, "index"]);
@@ -34,12 +35,14 @@ Route::get("/getArtistSongNotInAlbum", [SongController::class, "getArtistSongNot
 Route::delete('/song/{song}', [SongController::class, 'destroy'])->middleware(['auth:api', 'isArtist']);
 
 Route::post("/createAlbum", [AlbumController::class, "create"])->middleware(['auth:api', 'isArtist']);
+Route::get("/getAllAlbum", [AlbumController::class, "index"]);
 Route::get("/getArtistAlbum", [AlbumController::class, "getArtistAlbum"])->middleware('auth:api');
 Route::get("/getSingleArtistAlbum/{artistId}", [AlbumController::class, "getSingleArtistAlbum"])->middleware('auth:api');
 Route::get("/getSingleAlbum/{albumId}", [AlbumController::class, "getSingleAlbum"])->middleware('auth:api');
 Route::get('/album/{id}', [AlbumController::class, 'show']);
 Route::put('/album/{id}', [AlbumController::class, 'update']);
 Route::delete("/deleteAlbum", [AlbumController::class, "destroy"])->middleware(['auth:api', 'isArtist']);
+Route::get("/findOne/{albumId}", [AlbumController::class, "findOne"])->middleware('auth:api');
 
 Route::post("/addToFavourite", [FavouriteSongController::class, "addToFavourite"])->middleware('auth:api');
 Route::get("/getAllLikedSongs", [FavouriteSongController::class, "index"])->middleware('auth:api');

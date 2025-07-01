@@ -55,46 +55,4 @@ class UserVoteController extends Controller
         ])->first();
         return $vote;
     }
-
-
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreUser_voteRequest $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(User_vote $User_vote)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(User_vote $User_vote)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateUser_voteRequest $request, User_vote $User_vote)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(User_vote $User_vote)
-    {
-        //
-    }
 }

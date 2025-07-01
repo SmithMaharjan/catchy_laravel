@@ -5,11 +5,13 @@ namespace App\Models;
 use Illuminate\Auth\Passwords\CanResetPassword as PasswordsCanResetPassword;
 use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Passport\Contracts\OAuthenticatable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Passport\HasApiTokens;
 
 class User extends Authenticatable implements OAuthenticatable, MustVerifyEmail, CanResetPassword
@@ -53,6 +55,7 @@ class User extends Authenticatable implements OAuthenticatable, MustVerifyEmail,
     {
         return $this->belongsToMany(Playlist::class, 'user_playlist', 'user_id', 'playlist_id');
     }
+
     public function comment()
     {
         return $this->hasMany(Comment::class);
@@ -62,4 +65,11 @@ class User extends Authenticatable implements OAuthenticatable, MustVerifyEmail,
     {
         return $this->hasMany(User_vote::class, "vote_artist");
     }
+
+    // protected function isLiked()
+    // {
+    //     return Attribute::make(
+    //         get: fn() => $this->favourite_user_song()->where('artist_id', Auth::id())->isNotEmpty()
+    //     );
+    // }
 }

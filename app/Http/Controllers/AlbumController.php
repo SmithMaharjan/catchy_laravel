@@ -20,10 +20,25 @@ class AlbumController extends Controller
     /**
      * Display a listing of the resource.
      */
+
     public function index()
     {
-        //
+        try {
+            $albums = Album::with('songs')->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $albums,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
+
 
     public function getArtistAlbum()
     {
@@ -51,6 +66,15 @@ class AlbumController extends Controller
     {
         $user = Auth::user();
         $artistAlbum = $user->albums()->with('songs')->where("id", $albumId)->get();
+        return response()->json([
+            'success' => true,
+            "message" => "single album",
+            "album" => $artistAlbum
+        ]);
+    }
+    public function findOne($albumId)
+    {
+        $artistAlbum = Album::with('songs')->where("id", $albumId)->get();
         return response()->json([
             'success' => true,
             "message" => "single album",
@@ -161,9 +185,10 @@ class AlbumController extends Controller
      */
     public function update(Request $request, $id)
     {
+
         $request->validate([
             'name' => 'required|string|max:255',
-            'img_path' => 'nullable|string', // if image upload, handle differently
+            'img_path' => 'nullable|string',
         ]);
 
         $album = Album::find($id);
@@ -175,8 +200,16 @@ class AlbumController extends Controller
             ], 404);
         }
 
+        if ($album->artist_id !== Auth::id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized: cannot edit this album.',
+            ], 403);
+        }
+
+
         $album->name = $request->name;
-        $album->img_path = $request->img_path; // or handle file upload
+        $album->img_path = $request->img_path;
         $album->save();
 
         return response()->json([

@@ -32,44 +32,4 @@ class CommentController extends Controller
             "data" => $comment
         ]);
     }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreCommentRequest $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Comment $comment)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Comment $comment)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateCommentRequest $request, Comment $comment)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Comment $comment)
-    {
-        //
-    }
 }

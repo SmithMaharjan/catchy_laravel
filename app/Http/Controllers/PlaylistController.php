@@ -143,7 +143,13 @@ class PlaylistController extends Controller
                 'message' => 'Playlist not found',
             ], 404);
         }
-
+        $userPlaylist = $playlist->user()->where('user_id', Auth::id())->exists();
+        if (!$userPlaylist) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized: You do not have permission to update this playlist.',
+            ], 403);
+        }
         $playlist->name = $request->name;
         $playlist->is_collaborative = $request->is_collaborative;
         $playlist->description = $request->description;
@@ -166,8 +172,26 @@ class PlaylistController extends Controller
         try {
             $attribute = $request->validated();
 
-            $deleted = Playlist::destroy($attribute["removeId"]);
 
+            $playlist = Playlist::find($attribute["removeId"]);
+
+            if (!$playlist) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Playlist not found',
+                ], 404);
+            }
+
+            $isUserAttached = $playlist->user()->where('user_id', Auth::id())->exists();
+
+            if (!$isUserAttached) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized:permission denied to delete this playlist.',
+                ], 403);
+            }
+
+            $playlist->delete();
             return response()->json([
                 'success' => true,
                 'message' => 'Album deleted',
